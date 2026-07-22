@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 DataVentas</title>
+    <style>
+        /* ============================================== */
+        /* ESTILOS PRINCIPALES                           */
+        /* ============================================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 35px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+        .header h1 {
+            font-size: 3em;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+        .header h1 span {
+            background: rgba(255,255,255,0.2);
+            padding: 0 15px;
+            border-radius: 8px;
+        }
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+        .header .badge {
+            display: inline-block;
+            padding: 6px 25px;
+            border-radius: 25px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-top: 12px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(5px);
+        }
+        .badge.conectado { background: rgba(46, 204, 113, 0.4); }
+        .badge.desconectado { background: rgba(231, 76, 60, 0.4); }
+        .badge.cargando { background: rgba(52, 152, 219, 0.4); }
+        
+        /* BOTONES */
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            padding: 14px 35px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.2);
+        }
+        .btn:active { transform: translateY(0); }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        .btn-primary:hover { background: linear-gradient(135deg, #5a6fd6, #6a3f92); }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+        .btn-success:hover { background: linear-gradient(135deg, #219a52, #27ae60); }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        .btn-warning:hover { background: linear-gradient(135deg, #e08e0b, #d35400); }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        .btn-danger:hover { background: linear-gradient(135deg, #c0392b, #a93226); }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        .btn-info:hover { background: linear-gradient(135deg, #2980b9, #1f618d); }
+        
+        /* MENSAJE DE ESTADO */
+        #statusMsg {
+            display: none;
+            padding: 16px 22px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            font-weight: 500;
+            border-left: 5px solid;
+        }
+        #statusMsg.info {
+            display: block;
+            background: #d1ecf1;
+            color: #0c5460;
+            border-color: #17a2b8;
+        }
+        #statusMsg.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+            border-color: #28a745;
+        }
+        #statusMsg.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #dc3545;
+        }
+        #statusMsg.warning {
+            display: block;
+            background: #fff3cd;
+            color: #856404;
+            border-color: #ffc107;
+        }
+        
+        /* MÉTRICAS */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .card:hover { transform: translateY(-3px); }
+        .card .icon { font-size: 2em; display: block; margin-bottom: 5px; }
+        .card .numero {
+            font-size: 2.6em;
+            font-weight: 800;
+            color: #667eea;
+            margin: 5px 0;
+        }
+        .card .label {
+            color: #888;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        
+        /* TABLAS */
+        .tabla-container {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        .tabla-container h2 {
+            margin-bottom: 18px;
+            color: #333;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95em;
+        }
+        th {
+            background: #f8f9fa;
+            color: #333;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 700;
+            border-bottom: 2px solid #dee2e6;
+        }
+        td {
+            padding: 11px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        tr:hover { background: #f8f9ff; }
+        
+        /* GRÁFICO DE BARRAS */
+        .barra-container { margin: 8px 0; }
+        .barra-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            margin-bottom: 3px;
+            color: #555;
+        }
+        .barra {
+            height: 32px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 6px;
+            transition: width 0.8s ease;
+            display: flex;
+            align-items: center;
+            padding-left: 12px;
+            color: white;
+            font-weight: 700;
+            font-size: 0.85em;
+            min-width: 45px;
+        }
+        
+        /* LOADING */
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            color: #aaa;
+            margin-top: 30px;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            .header h1 { font-size: 2em; }
+            .btn { padding: 12px 20px; font-size: 0.9em; width: 100%; justify-content: center; }
+            .btn-group { flex-direction: column; align-items: stretch; }
+            .grid { grid-template-columns: 1fr 1fr; }
+            .card .numero { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ================================================ -->
+        <!-- HEADER                                           -->
+        <!-- ================================================ -->
+        <div class="header">
+            <h1>📊 <span>DataVentas</span></h1>
+            <p>Conecta tu banco y descubre qué productos se venden más</p>
+            <span class="badge desconectado" id="statusBadge">🔴 Desconectado</span>
+        </div>
+
+        <!-- ================================================ -->
+        <!-- BOTONES DE ACCIÓN                                -->
+        <!-- ================================================ -->
+        <div class="btn-group">
+            <button class="btn btn-primary" id="btnConectar" onclick="conectarBanco()">
+                🔗 Conectar Banco
+            </button>
+            <button class="btn btn-success" id="btnCargar" onclick="cargarDatosReales()">
+                📊 Ver Ventas
+            </button>
+            <button class="btn btn-warning" id="btnDemo" onclick="usarDemo()">
+                🎯 Usar Demo
+            </button>
+            <button class="btn btn-danger" id="btnLimpiar" onclick="limpiarDatos()">
+                🗑️ Limpiar
+            </button>
+        </div>
+
+        <!-- ================================================ -->
+        <!-- MENSAJE DE ESTADO                                -->
+        <!-- ================================================ -->
+        <div id="statusMsg"></div>
+
+        <!-- ================================================ -->
+        <!-- MÉTRICAS                                         -->
+        <!-- ================================================ -->
+        <div class="grid" id="metricas">
+            <div class="card">
+                <span class="icon">💰</span>
+                <div class="numero" id="totalIngresos">-</div>
+                <div class="label">Ingresos Totales</div>
+            </div>
+            <div class="card">
+                <span class="icon">📦</span>
+                <div class="numero" id="totalUnidades">-</div>
+                <div class="label">Unidades Vendidas</div>
+            </div>
+            <div class="card">
+                <span class="icon">🏷️</span>
+                <div class="numero" id="totalProductos">-</div>
+                <div class="label">Productos Distintos</div>
+            </div>
+            <div class="card">
+                <span class="icon">📄</span>
+                <div class="numero" id="totalTransacciones">-</div>
+                <div class="label">Transacciones</div>
+            </div>
+        </div>
+
+        <!-- ================================================ -->
+        <!-- TABLA DE PRODUCTOS                               -->
+        <!-- ================================================ -->
+        <div class="tabla-container">
+            <h2>🏆 Top Productos Más Vendidos</h2>
+            <div id="tablaProductos">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Conecta tu banco o usa el modo demo para ver datos</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================ -->
+        <!-- GRÁFICO DE BARRAS                                -->
+        <!-- ================================================ -->
+        <div class="tabla-container">
+            <h2>📊 Ventas por Producto</h2>
+            <div id="graficoBarras">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Esperando datos...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================ -->
+        <!-- DETALLE DE TRANSACCIONES                         -->
+        <!-- ================================================ -->
+        <div class="tabla-container">
+            <h2>📋 Detalle de Transacciones</h2>
+            <div id="detalleTransacciones">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Esperando datos...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================ -->
+        <!-- FOOTER                                           -->
+        <!-- ================================================ -->
+        <div class="footer">
+            🔄 Última actualización: <span id="fechaActualizacion">-</span>
+            <br>
+            <span style="font-size:0.8em;color:#ccc;">
+                DataVentas v2.0 | Conecta tu banco vía Belvo
+            </span>
+        </div>
+    </div>
+
+    <!-- ================================================ -->
+    <!-- BELVO WIDGET (librería para conectar banco)      -->
+    <!-- ================================================ -->
+    <script src="https://cdn.belvo.co/widget/latest/belvo-widget.js"></script>
+
+    <script>
+        // ============================================================
+        // DATOS DE DEMO
+        // ============================================================
+
+        const DATOS_DEMO = {
+            total_ingresos: 1245.00,
+            total_ventas: 55,
+            total_productos: 6,
+            resumen_ventas: [
+                { producto: "👗 Falda larga floral", unidades: 15, ingreso_total: 375.00 },
+                { producto: "👗 Falda corta lisa", unidades: 12, ingreso_total: 240.00 },
+                { producto: "👗 Falda midi estampada", unidades: 10, ingreso_total: 250.00 },
+                { producto: "👗 Falda larga de cuero", unidades: 8, ingreso_total: 200.00 },
+                { producto: "👗 Falda short plisada", unidades: 6, ingreso_total: 120.00 },
+                { producto: "👗 Falda larga de denim", unidades: 4, ingreso_total: 60.00 }
+            ],
+            detalle_ventas: [
+                { fecha: "2026-07-15", descripcion: "Falda larga floral", monto: 25.00 },
+                { fecha: "2026-07-15", descripcion: "Falda corta lisa", monto: 20.00 },
+                { fecha: "2026-07-16", descripcion: "Falda larga floral", monto: 25.00 },
+                { fecha: "2026-07-16", descripcion: "Falda midi estampada", monto: 25.00 },
+                { fecha: "2026-07-17", descripcion: "Falda corta lisa", monto: 20.00 },
+                { fecha: "2026-07-17", descripcion: "Falda larga de cuero", monto: 25.00 },
+                { fecha: "2026-07-18", descripcion: "Falda larga floral", monto: 25.00 }
+            ]
+        };
+
+        // ============================================================
+        // VARIABLES GLOBALES
+        // ============================================================
+
+        let linkIdActual = null;
+        let datosActuales = null;
+        const BACKEND_URL = 'http://localhost:5000';
+
+        // ============================================================
+        // FUNCIONES AUXILIARES
+        // ============================================================
+
+        function mostrarMensaje(texto, tipo = 'info') {
+            const msg = document.getElementById('statusMsg');
+            msg.textContent = texto;
+            msg.className = tipo;
+            msg.style.display = 'block';
+            
+            // Scroll al mensaje
+            msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Ocultar después de 8 segundos
+            clearTimeout(msg._timeout);
+            msg._timeout = setTimeout(() => {
+                msg.style.display = 'none';
+            }, 8000);
+        }
+
+        function actualizarBadge(estado) {
+            const badge = document.getElementById('statusBadge');
+            badge.className = 'badge ' + estado;
+            if (estado === 'conectado') {
+                badge.textContent = '🟢 Conectado';
+            } else if (estado === 'cargando') {
+                badge.textContent = '🔄 Cargando...';
+            } else {
+                badge.textContent = '🔴 Desconectado';
+            }
+        }
+
+        function habilitarBotones(estado) {
+            document.getElementById('btnConectar').disabled = !estado;
+            document.getElementById('btnCargar').disabled = !estado;
+            document.getElementById('btnDemo').disabled = !estado;
+        }
+
+        // ============================================================
+        // 1. CONECTAR CON EL BANCO (ABRE EL WIDGET DE BELVO)
+        // ============================================================
+
+        function conectarBanco() {
+            mostrarMensaje('🔄 Generando token de conexión...', 'info');
+            actualizarBadge('cargando');
+            habilitarBotones(false);
+
+            fetch(`${BACKEND_URL}/api/token`)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data.success) throw new Error(data.error || 'Error al generar token');
+                    
+                    const accessToken = data.access_token;
+                    mostrarMensaje('✅ Token generado. Abriendo widget...', 'success');
+                    
+                    // Iniciar widget de Belvo
+                    const belvo = new BelvoWidget({
+                        access_token: accessToken,
+                        onSuccess: function(linkId) {
+                            linkIdActual = linkId;
+                            mostrarMensaje('✅ ¡Banco conectado exitosamente!', 'success');
+                            actualizarBadge('conectado');
+                            habilitarBotones(true);
+                            
+                            // Cargar datos automáticamente
+                            setTimeout(() => cargarDatosReales(), 500);
+                        },
+                        onExit: function() {
+                            mostrarMensaje('ℹ️ Cerraste el widget. Puedes volver a intentarlo.', 'info');
+                            actualizarBadge('desconectado');
+                            habilitarBotones(true);
+                        },
+                        onError: function(error) {
+                            mostrarMensaje('❌ Error en el widget: ' + (error || 'Error desconocido'), 'error');
+                            actualizarBadge('desconectado');
+                            habilitarBotones(true);
+                        }
+                    });
+                    
+                    belvo.openWidget();
+                })
+                .catch(error => {
+                    mostrarMensaje('❌ Error: ' + error.message, 'error');
+                    actualizarBadge('desconectado');
+                    habilitarBotones(true);
+                    console.error('Error:', error);
+                });
+        }
+
+        // ============================================================
+        // 2. CARGAR DATOS REALES DEL BANCO
+        // ============================================================
+
+        function cargarDatosReales() {
+            if (!linkIdActual) {
+                mostrarMensaje('🔗 Primero conecta tu banco con el botón "Conectar Banco"', 'warning');
+                return;
+            }
+
+            mostrarMensaje('🔄 Obteniendo tus transacciones reales...', 'info');
+            actualizarBadge('cargando');
+
+            fetch(`${BACKEND_URL}/api/transacciones`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ link_id: linkIdActual })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                if (!data.success) throw new Error(data.error || 'Error al obtener transacciones');
+                
+                mostrarMensaje('✅ ¡Datos cargados correctamente!', 'success');
+                actualizarBadge('conectado');
+                cargarDatos(data.datos);
+            })
+            .catch(error => {
+                mostrarMensaje('❌ Error obteniendo datos: ' + error.message, 'error');
+                actualizarBadge('conectado');
+                console.error('Error:', error);
+            });
+        }
+
+        // ============================================================
+        // 3. USAR MODO DEMO
+        // ============================================================
+
+        function usarDemo() {
+            mostrarMensaje('🎯 Usando datos de ejemplo (modo demo)', 'info');
+            cargarDatos(DATOS_DEMO);
+            actualizarBadge('conectado');
+            linkIdActual = 'demo_mode';
+        }
+
+        // ============================================================
+        // 4. LIMPIAR DATOS
+        // ============================================================
+
+        function limpiarDatos() {
+            linkIdActual = null;
+            datosActuales = null;
+            
+            document.getElementById('totalIngresos').textContent = '-';
+            document.getElementById('totalUnidades').textContent = '-';
+            document.getElementById('totalProductos').textContent = '-';
+            document.getElementById('totalTransacciones').textContent = '-';
+            document.getElementById('fechaActualizacion').textContent = '-';
+            
+            document.getElementById('tablaProductos').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Sin datos cargados</p>
+                </div>
+            `;
+            
+            document.getElementById('graficoBarras').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Sin datos cargados</p>
+                </div>
+            `;
+            
+            document.getElementById('detalleTransacciones').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Sin datos cargados</p>
+                </div>
+            `;
+            
+            actualizarBadge('desconectado');
+            mostrarMensaje('🗑️ Datos limpiados correctamente', 'info');
+        }
+
+        // ============================================================
+        // 5. RENDERIZAR DATOS EN EL DASHBOARD
+        // ============================================================
+
+        function cargarDatos(datos) {
+            datosActuales = datos;
+            
+            // Métricas
+            document.getElementById('totalIngresos').textContent = `$${datos.total_ingresos.toFixed(2)}`;
+            document.getElementById('totalUnidades').textContent = datos.total_ventas || 0;
+            document.getElementById('totalProductos').textContent = datos.total_productos || datos.resumen_ventas.length;
+            document.getElementById('totalTransacciones').textContent = datos.detalle_ventas ? datos.detalle_ventas.length : 0;
+            
+            // Tabla
+            renderizarTabla(datos.resumen_ventas);
+            
+            // Gráfico
+            renderizarGrafico(datos.resumen_ventas);
+            
+            // Detalle
+            renderizarDetalle(datos.detalle_ventas);
+            
+            // Fecha
+            document.getElementById('fechaActualizacion').textContent = new Date().toLocaleString();
+        }
+
+        function renderizarTabla(productos) {
+            const container = document.getElementById('tablaProductos');
+            
+            if (!productos || productos.length === 0) {
+                container.innerHTML = `<div class="loading"><p>📭 No hay productos registrados</p></div>`;
+                return;
+            }
+
+            let html = `
+                <table>
+                    <thead><tr>
+                        <th style="width:50%;">🏆 Producto</th>
+                        <th style="width:25%;text-align:center;">📦 Unidades</th>
+                        <th style="width:25%;text-align:right;">💰 Ingreso Total</th>
+                    </tr></thead>
+                    <tbody>
+            `;
+
+            productos.forEach((p, i) => {
+                const medalla = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+                html += `
+                    <tr>
+                        <td><strong>${medalla}</strong> ${p.producto}</td>
+                        <td style="text-align:center;">${p.unidades}</td>
+                        <td style="text-align:right;">$${p.ingreso_total.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function renderizarGrafico(productos) {
+            const container = document.getElementById('graficoBarras');
+            
+            if (!productos || productos.length === 0) {
+                container.innerHTML = `<div class="loading"><p>📭 No hay datos para mostrar</p></div>`;
+                return;
+            }
+
+            const max = Math.max(...productos.map(p => p.unidades));
+            
+            let html = '';
+            productos.slice(0, 10).forEach(p => {
+                const pct = (p.unidades / max) * 100;
+                html += `
+                    <div class="barra-container">
+                        <div class="barra-label">
+                            <span>${p.producto}</span>
+                            <span>${p.unidades} unidades</span>
+                        </div>
+                        <div class="barra" style="width: ${pct}%;">
+                            ${pct > 25 ? p.unidades : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderizarDetalle(transacciones) {
+            const container = document.getElementById('detalleTransacciones');
+            
+            if (!transacciones || transacciones.length === 0) {
+                container.innerHTML = `<div class="loading"><p>📭 No hay transacciones registradas</p></div>`;
+                return;
+            }
+
+            const mostrar = transacciones.slice(0, 50);
+            
+            let html = `
+                <table>
+                    <thead><tr>
+                        <th>📅 Fecha</th>
+                        <th>📝 Descripción</th>
+                        <th style="text-align:right;">💰 Monto</th>
+                    </tr></thead>
+                    <tbody>
+            `;
+
+            mostrar.forEach(t => {
+                const fecha = t.fecha ? new Date(t.fecha).toLocaleDateString() : '-';
+                html += `
+                    <tr>
+                        <td>${fecha}</td>
+                        <td>${t.descripcion || 'Sin descripción'}</td>
+                        <td style="text-align:right;">$${t.monto.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            if (transacciones.length > 50) {
+                html += `<tr><td colspan="3" style="text-align:center;color:#999;font-style:italic;">
+                    Mostrando 50 de ${transacciones.length} transacciones
+                </td></tr>`;
+            }
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        // ============================================================
+        // 6. VERIFICAR CONEXIÓN CON EL BACKEND
+        // ============================================================
+
+        function verificarBackend() {
+            fetch(`${BACKEND_URL}/api/health`)
+                .then(res => {
+                    if (res.ok) {
+                        mostrarMensaje('✅ Backend disponible en ' + BACKEND_URL, 'success');
+                        habilitarBotones(true);
+                    }
+                })
+                .catch(() => {
+                    mostrarMensaje('⚠️ No se pudo conectar al backend. Ejecuta: python app.py', 'warning');
+                    habilitarBotones(false);
+                });
+        }
+
+        // ============================================================
+        // 7. INICIALIZAR
+        // ============================================================
+
+        window.onload = function() {
+            console.log('📊 DataVentas - Inicializando...');
+            console.log('🔗 Backend:', BACKEND_URL);
+            
+            setTimeout(verificarBackend, 500);
+            
+            setTimeout(() => {
+                mostrarMensaje('👋 ¡Bienvenido! Conecta tu banco o usa el modo demo.', 'info');
+            }, 1000);
+        };
+    </script>
+</body>
+</html>
